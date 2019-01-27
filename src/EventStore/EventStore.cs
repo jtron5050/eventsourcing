@@ -11,7 +11,7 @@ namespace EventStore
     public class EventStore : IEventStore
     {
         private const string SELECT_EVENTS_SQL = "select streamId, data, version, eventType, eventId from events where streamid = @streamId order by version";
-        private const string INSERT_EVENT_FOR_STREAM_SQL = "insert into events (streamId, data, version) values (@streamId, @data, @version)";
+        private const string INSERT_EVENT_FOR_STREAM_SQL = "insert into events (eventId, streamId, data, version, eventType) values (@eventId, @streamId, @data, @version, @eventType)";
         private const string UPDATE_STREAM_VERSION_SQL = "update streams set version = @version where streamId = @streamId";
         private const string INSERT_NEW_STREAM_SQL = "insert into streams (streamid, type, version) values (@streamId, @type, 0)";
         private const string GET_STREAM_VERSION_SQL = "select version from streams where streamId = @streamId";
@@ -40,6 +40,7 @@ namespace EventStore
                 using (var transaction = connection.BeginTransaction())
                 {
                     var version = connection.ExecuteScalar<int?>(GET_STREAM_VERSION_SQL, new { streamId = stream }, transaction);
+                    
                     if (version == null)
                     {
                         connection.Execute(INSERT_NEW_STREAM_SQL, new { streamId = stream, type = stream }, transaction);
@@ -53,13 +54,13 @@ namespace EventStore
                     }
 
                     var e = events
-                        .Select((dynamic @event) => new
+                        .Select((@event) => new
                         {
+                            eventId = @event.EventId.ToString(),
                             streamId = stream,
                             version = ++version,
-                            data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
-                            eventType = @event.GetType(),
-                            EventId = @event.EventId
+                            data = @event.Data,
+                            eventType = @event.EventType
                         }).ToArray();
 
                     connection.Execute(INSERT_EVENT_FOR_STREAM_SQL, e, transaction);

@@ -1,4 +1,5 @@
 PRAGMA foreign_keys=OFF;
+PRAGMA journal_mode=WAL;
 BEGIN TRANSACTION;
 CREATE TABLE events(
     eventId text primary key not null,

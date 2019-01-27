@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MediatR;
+using System.Reflection;
 
 namespace EventStore
 {
@@ -18,7 +20,7 @@ namespace EventStore
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
+            services.AddMediatR(Assembly.GetExecutingAssembly());
             services.AddSingleton<IEventStore, EventStore>();
         }
 
@@ -29,6 +31,7 @@ namespace EventStore
                 app.UseDeveloperExceptionPage();
             }
 
+            //app.UseHttpsRedirection();
             app.UseMvc();
         }
     }
